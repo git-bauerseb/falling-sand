@@ -1,0 +1,15 @@
+.wrapper {
+    position: relative;
+    margin: 10% 25% 10% 25%;
+}
+
+body {
+    background: #546E7A;
+}
+
+.wrapper canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-shadow: 0px 0px 10px #263238;
+}

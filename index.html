@@ -1,0 +1,85 @@
+<html>
+    <head>
+        <link href="./style.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="wrapper" id="canv-wrapper">
+            <!-- Canvas for background -->
+            <canvas id="background-canvas">No canvas available</canvas>
+            <!-- Canvas for sand simulation-->
+            <canvas id="drawing-canvas" width="960" height="640">No canvas available</canvas>
+            <!-- Canvas for foreground-->
+            <canvas id="game-canvas">No canvas available</canvas>
+        </div>
+
+        <div style="display: none;">
+                <img id="background-img"
+                     src="./img/background_image.png" width="960" height="640">
+        </div>
+
+        <!-- TESTING -->
+        <div style="display: none;">
+            <img id="test" src="./img/test.png">
+        </div>
+
+        <!-- Background -->
+        <!-- Clouds -->
+        <div style="display: none;">
+            <img id="cloud"
+                 src="./img/cloud.png">
+        </div>
+
+
+        <!-- Pregenerated terrain -->
+        <div style="display: none;">
+            <img id="pregenerated-terrain"
+                 src="./img/pregenerated_terrain.png">
+        </div>
+
+        <!-- Bunker images -->
+
+        <!-- Health Bar -->
+        <div style="display: none;">
+            <img id="bunker-health-bar"
+                 src="./img/bunker_health_bar.png">
+        </div>
+
+
+        <!-- Body -->
+        <div style="display: none;">
+                <img id="bunker-body-img"
+                     src="./img/bunker_body.png">
+        </div>
+
+        <!-- Head (Red) -->
+        <div style="display: none;">
+            <img id="bunker-head"
+                 src="./img/bunker_head.png">
+        </div>
+
+        <!-- Head (Red; Little Damage) -->
+        <div style="display: none;">
+            <img id="bunker-head-little-damage"
+                src="./img/bunker_head_little_damage.png">
+        </div>
+
+         <!-- Head (Red; Huge Damage) -->
+         <div style="display: none;">
+            <img id="bunker-head-large-damage"
+                src="./img/bunker_head_large_damage.png">
+        </div>
+    </body>
+    
+    <!-- Scripts for falling sand simulation -->
+    <script type="text/javascript" src="scripts/sim/util.js"></script>
+    <script type="text/javascript" src="scripts/sim/cursor.js"></script>
+    <script type="text/javascript" src="scripts/sim/spigots.js"></script>
+    <script type="text/javascript" src="scripts/sim/particles.js"></script>
+    <script type="text/javascript" src="scripts/environ/background.js"></script>
+    <script type="text/javascript" src="scripts/sim/elements.js"></script>
+    <script type="text/javascript" src="scripts/sim/game.js"></script>
+
+
+    <!-- Scripts for bunker simulation -->
+    <script type="text/javascript" src="scripts/bunk/bunker.js"></script>
+</html>

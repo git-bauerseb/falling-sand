@@ -1,23 +1,27 @@
+const MAX_NUM_PARTICLES = 100;
+const TWO_PI = 6.28318530718;
 const offscreenParticleCanvas = document.createElement('canvas');
 const offscreenParticleCtx = offscreenParticleCanvas.getContext('2d', {alpha: false});
 
-const UNKNOWN_PARTICLE_INIT = 0;
-const METHANE_PARTICLE_INIT = 7;
+const UNKNOWN_PARTICLE = 0;
+const METHANE_PARTICLE = 1;
+const NAPALM_PARTICLE = 2;
 
 const __particleInit = [
     UNKNOWN_PARTICLE_INIT,
-    METHANE_PARTICLE_INIT
+    METHANE_PARTICLE_INIT,
+    NAPALM_PARTICLE_INIT
 ];
 
 Object.freeze(__particleInit);
 
 const _particleActions = [
     UNKNOWN_PARTICLE_ACTION,
-    METHANE_PARTICLE_ACTION
+    METHANE_PARTICLE_ACTION,
+    NAPALM_PARTICLE_ACTION
 ];
 
 Object.freeze(_particleActions);
-
 
 /*
  * When we copy the particle strokes to the main canvas, some
@@ -29,12 +33,41 @@ Object.freeze(_particleActions);
 const PAINTABLE_PARTICLE_COLORS = {};
 const MAGIC_COLORS = [];
 
-
-function UNKNOWN_PARTICLE_ACTION() {
+function UNKNOWN_PARTICLE_INIT(particle) {}
+function UNKNOWN_PARTICLE_ACTION(particle) {
     throw "Unknown particle";
 }
 
-function METHANE_PARTICLE_ACTION() { }
+function METHANE_PARTICLE_INIT(particle) {
+    particle.setColor(FIRE);
+    particle.size = 10 + Math.random() * 10;
+}
+function METHANE_PARTICLE_ACTION(particle) {
+    const iterations = particle.actionIterations;
+    particle.drawCircle(particle.size);
+
+    if (iterations > 2) {
+        particles.makeParticleInactive(particle);
+    }
+}
+
+function NAPALM_PARTICLE_INIT(particle) {
+    particle.setColor(FIRE);
+    particle.size = Math.random() * 8 + 6;
+    particle.xVelocity = Math.random() * 8 - 4;
+    particle.yVelocity = -1 * (Math.random() * 4 + 4);
+    particle.maxIterations = Math.floor(Math.random() * 10) + 5;
+}
+function NAPALM_PARTICLE_ACTION(particle) {
+    particle.drawCircle(particle.size);
+
+    particle.x += particle.xVelocity;
+    particle.y += particle.yVelocity;
+    particle.size *= 1 + Math.random() * 0.1;
+  
+    if (particle.actionIterations > particle.maxIterations)
+      particles.makeParticleInactive(particle);
+}
 
 class ParticleList {
     constructor() {
@@ -256,4 +289,85 @@ function initParticles() {
 
     // MAGIC_COLORS.push();
     Object.freeze(MAGIC_COLORS);
+}
+
+function updateParticles() {
+    if (!particles.activeHead) return;
+
+    const canvasWidth = offscreenParticleCanvas.width;
+    const canvasHeight = offscreenParticleCanvas.height;
+
+    offscreenParticleCtx.beginPath();
+
+    offscreenParticleCtx.fillStyle = 'rgba(0,0,0,1)';
+    offscreenParticleCtx.rect(0,0,canvasWidth, canvasHeight);
+
+    offscreenParticleCtx.fill();
+
+    let particle = particles.activeHead;
+    while (particle) {
+        const next = particle.next;
+        particle.actionIterations++;
+        _particleActions[particle.type](particle);
+        particle = next;
+    }
+
+    const particleImageData = offscreenParticleCtx.getImageData(
+        0,
+        0,
+        canvasWidth,
+        canvasHeight
+    );
+
+    const particleImageData32 = new Uint32Array(particleImageData.data.buffer);
+    let x,y;
+    let __yOffset = 0;
+    const aliasingSearchDistance = 3;
+    for (y = 0; y !== canvasHeight; y++) {
+        const yOffset = __yOffset;
+        for (x = 0; x !== canvasWidth; x++) {
+            const i = x + yOffset;
+            const particleColor = particleImageData32[i];
+
+            if (particleColor === 0xff000000) continue;
+
+
+            if (particleColor in PAINTABLE_PARTICLE_COLORS) {
+                imageData32[i] = particleColor;
+                continue;
+              } else {
+                var searchColor;
+                if (x - aliasingSearchDistance >= 0) {
+                  searchColor = particleImageData32[i - aliasingSearchDistance];
+                  if (searchColor in PAINTABLE_PARTICLE_COLORS) {
+                    imageData32[i] = searchColor;
+                    continue;
+                  }
+                }
+                if (x + aliasingSearchDistance <= MAX_X_IDX) {
+                  searchColor = particleImageData32[i + aliasingSearchDistance];
+                  if (searchColor in PAINTABLE_PARTICLE_COLORS) {
+                    imageData32[i] = searchColor;
+                    continue;
+                  }
+                }
+                if (y - aliasingSearchDistance >= 0) {
+                  searchColor = particleImageData32[i - aliasingSearchDistance * canvasWidth];
+                  if (searchColor in PAINTABLE_PARTICLE_COLORS) {
+                    imageData32[i] = searchColor;
+                    continue;
+                  }
+                }
+                if (y + aliasingSearchDistance <= MAX_Y_IDX) {
+                  searchColor = particleImageData32[i + aliasingSearchDistance * canvasWidth];
+                  if (searchColor in PAINTABLE_PARTICLE_COLORS) {
+                    imageData32[i] = searchColor;
+                    continue;
+                  }
+                }
+            }
+        }
+
+        __yOffset += canvasWidth;
+    }
 }

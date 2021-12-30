@@ -16,7 +16,8 @@ const PROJECTILE_TYPE = {
     ACID        : 1,
     LASER       : 2,
     GRENADE     : 3,
-    NUKE        : 4
+    NUKE        : 4,
+    PACKAGE     : 5
 };
 
 const PLAYER_TYPE = {
@@ -127,6 +128,8 @@ class Projectile {
                 case PROJECTILE_TYPE.NUKE:
                     ctx.fillStyle = 'rgb(253, 216, 53)';
                     break;
+                case PROJECTILE_TYPE.PACKAGE:
+                    ctx.fillStyle = 'brown';
             }
 
             if (this.position.y > 0) {
@@ -180,7 +183,7 @@ class Projectile {
 
 
             // Spawn two smaller grenades and delete current one
-        if (this.type == PROJECTILE_TYPE.GRENADE && !this.deactivated) {
+        if (this.type === PROJECTILE_TYPE.GRENADE && !this.deactivated) {
             if (random() < 5 && !this.ischild) {
 
                 for (let i = 0; i < 5; i++) {
@@ -193,6 +196,29 @@ class Projectile {
                     proj.position.y = this.position.y;
                     proj.velocity.x = (1 + random() / 250)*this.velocity.x;
                     proj.velocity.y = (1 + random() / 250)*this.velocity.y;
+
+                    projectiles.push(proj);
+                }
+
+                this.deactivated = true;
+                return;
+            }
+        }
+
+        if (this.type === PROJECTILE_TYPE.PACKAGE && !this.deactivated) {
+            if (random() < 2 && !this.ischild) {
+                const _types = [PROJECTILE_TYPE.ACID,PROJECTILE_TYPE.ACID, PROJECTILE_TYPE.STONE, PROJECTILE_TYPE.NUKE, PROJECTILE_TYPE.GRENADE];
+                for (let i = 0; i < 5; i++) {
+
+                    let proj = new Projectile(
+                        0,0,
+                        0,0,0,_types[i],projectiles.length - 1, true
+                    );
+
+                    proj.position.x = this.position.x;
+                    proj.position.y = this.position.y;
+                    proj.velocity.x = (1 + random() / 100)*this.velocity.x;
+                    proj.velocity.y = (1 + random() / 100)*this.velocity.y;
 
                     projectiles.push(proj);
                 }
@@ -221,10 +247,12 @@ class Projectile {
                     fillCircle(intX, intY, 15, METHANE);
                     break;
                 case PROJECTILE_TYPE.ACID:
-                    fillCircle(intX, intY, 5, ACID);
+                    fillCircle(intX, intY, 8, ACID);
                     break;
                 case PROJECTILE_TYPE.NUKE:
-                    fillCircle(intX, intY, 75, DIRT_PARTICLE);
+                    fillCircleIfEmptyDirty(intX, intY, 50, METHANE, FIRE, 10);
+                    fillCircleIfEmptyDirty(intX, intY, 25, NAPALM, FIRE, 80);
+
                     break;
                 case PROJECTILE_TYPE.GRENADE:
                     if (this.ischild) {
@@ -362,7 +390,7 @@ class Bunker {
 
         // Switch weapon
         if (event.key === WeaponUp[this.playerType]) {
-            this.curProjType = (this.curProjType + 1) % 5;
+            this.curProjType = (this.curProjType + 1) % 6;
             console.log(`Current type: ${this.curProjType}`);
         }
 

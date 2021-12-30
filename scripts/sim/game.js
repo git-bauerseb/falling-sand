@@ -16,7 +16,7 @@ const colors = [
     { r: 131, g: 147, b: 140, col: DARK_GREY },
     { r: 255, g: 255, b: 255, col: WHITE },
     { r: 0, g: 0, b: 0, col: BACKGROUND },
-    {r: 3, g: 116, b: 188, col: WATER}
+    { r: 3, g: 116, b: 188, col: WATER }
 ];
 
 
@@ -141,8 +141,8 @@ function closestColorMatch(r, g, b) {
 
     for (let i = 0; i < colors.length; i++) {
 
-        const val = (r - colors[i].r)*(r - colors[i].r) + (g - colors[i].g)*(g - colors[i].g)
-         + (b - colors[i].b)*(b - colors[i].b);
+        const val = (r - colors[i].r) * (r - colors[i].r) + (g - colors[i].g) * (g - colors[i].g)
+            + (b - colors[i].b) * (b - colors[i].b);
 
         if (val < dist) {
             dist = val;
@@ -214,11 +214,44 @@ function fillCircle(centerX, centerY, radius, type) {
     }
 }
 
+function fillCircleIfEmpty(centerX, centerY, radius, type) {
+    let top = Math.floor(centerY - radius);
+    let bottom = Math.floor(centerY + radius);
+    let left = Math.floor(centerX - radius);
+    let right = Math.floor(centerX + radius);
+
+    for (let y = top; y <= bottom; y++) {
+        for (let x = left; x <= right; x++) {
+            if (isInData(x, y) && insideCircle(centerX, centerY, x, y, radius) && imageData32[x + y * canvWidth] === BACKGROUND)
+                imageData32[x + y * canvWidth] = type;
+        }
+    }
+}
+
+function fillCircleIfEmptyDirty(centerX, centerY, radius, type1, type2, type1chance) {
+    let top = Math.floor(centerY - radius);
+    let bottom = Math.floor(centerY + radius);
+    let left = Math.floor(centerX - radius);
+    let right = Math.floor(centerX + radius);
+
+    for (let y = top; y <= bottom; y++) {
+        for (let x = left; x <= right; x++) {
+            if (isInData(x, y) && insideCircle(centerX, centerY, x, y, radius) && random() < 40)
+                if (random() < type1chance) {
+                    imageData32[x + y * canvWidth] = type1;
+                } else {
+                    imageData32[x + y * canvWidth] = type2;
+                }
+        }
+    }
+}
+
+
 
 function init() {
 
     ctx.scale(2, 2);
-    
+
     document.getElementById('canv-wrapper').appendChild(drawCanvas);
     drawCanvas.style = 'display: none';
 
@@ -246,7 +279,7 @@ function init() {
             imageData32[pos] = closestColorMatch(r, g, b);
         }
     }
-    
+
 
     // Initialize available elements
     initElements();
@@ -330,6 +363,7 @@ function mainLoop(timeStamp) {
     updateBunkers(1 / secondsPassed, imageData32);
     updateBackground(1 / secondsPassed);
     updateGame();
+    updateParticles();
 
 
     fps = Math.round(1 / secondsPassed);

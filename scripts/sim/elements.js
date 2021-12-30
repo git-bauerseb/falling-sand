@@ -61,6 +61,7 @@ const DARK_BROWN = UInt32Color(121,85,34,'Dark brown');
 
 const GREEN_3 = UInt32Color(121,85,34,'Dark brown');
 const METHANE = UInt32Color(144, 164, 174, 'Methane');
+const NAPALM = UInt32Color(220, 128, 70, 'Napalm');
 
 const elements = new Uint32Array([
     BACKGROUND,
@@ -82,7 +83,8 @@ const elements = new Uint32Array([
     LIGHT_BROWN,
     DARK_BROWN,
     GREEN_3,
-    METHANE
+    METHANE,
+    NAPALM
 ]);
 
 const elementActions = [
@@ -105,7 +107,8 @@ const elementActions = [
     LIGHT_BROWN_ACTION,
     DARK_BROWN_ACTION,
     GREEN_3_ACTION,
-    METHANE_ACTION
+    METHANE_ACTION,
+    NAPALM_ACTION
 ];
 
 
@@ -332,6 +335,18 @@ function METHANE_ACTION(x,y,i) {
         return;
     }
     if(doRise(x,y,i,25,65)) {return;}
+}
+
+function NAPALM_ACTION(x,y,i) {
+    if (random() < 25 && bordering(x,y,i, FIRE) !== -1) {
+        if (!particles.addActiveParticle(NAPALM_PARTICLE, x,y,i)) {
+            imageData32[i] = FIRE;
+        }
+
+        return;
+    }
+
+    if (doGravity(x,y,i,true,95)) return;
 }
 
 /*

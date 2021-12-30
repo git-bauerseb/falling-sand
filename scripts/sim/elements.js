@@ -59,8 +59,8 @@ const DARK_GREY = UInt32Color(128,144,143, 'Dark grey');
 const LIGHT_BROWN = UInt32Color(122,154,32, 'Light brown');
 const DARK_BROWN = UInt32Color(121,85,34,'Dark brown');
 
-
 const GREEN_3 = UInt32Color(121,85,34,'Dark brown');
+const METHANE = UInt32Color(144, 164, 174, 'Methane');
 
 const elements = new Uint32Array([
     BACKGROUND,
@@ -80,7 +80,9 @@ const elements = new Uint32Array([
     LIGHT_GREY,
     DARK_GREY,
     LIGHT_BROWN,
-    DARK_BROWN
+    DARK_BROWN,
+    GREEN_3,
+    METHANE
 ]);
 
 const elementActions = [
@@ -102,7 +104,8 @@ const elementActions = [
     DARK_GREY_ACTION,
     LIGHT_BROWN_ACTION,
     DARK_BROWN_ACTION,
-    GREEN_3
+    GREEN_3_ACTION,
+    METHANE_ACTION
 ];
 
 
@@ -167,21 +170,20 @@ function DARK_GREEN_ACTION(x, y, i) { }
 function LIGHT_GREY_ACTION(x, y, i) {
      // Can sink through water
 
-     if (doGravity(x, y, i, true, 3)) { return; }
+     if (doGravity(x, y, i, true, 1)) { return; }
 }
 function DARK_GREY_ACTION(x, y, i) {
      // Can sink through water
 
-     if (doGravity(x, y, i, true, 3)) { return; }
+     if (doGravity(x, y, i, true, 1)) { return; }
 }
 function LIGHT_BROWN_ACTION(x, y, i) { }
 function DARK_BROWN_ACTION(x, y, i) { }
 
 function WHITE_ACTION(x, y, i) {
      // Can sink through water
-     if (doDensitySink(x, y, i, WATER, true, 25)) { return; }
 
-     if (doGravity(x, y, i, true, 40)) { return; }
+     if (doGravity(x, y, i, true, 10)) { return; }
  }
 
 
@@ -318,6 +320,18 @@ function ACID_ACTION(x, y, i) {
 
 
     if (doGravity(x, y, i, true, 100)) return;
+}
+
+
+function METHANE_ACTION(x,y,i) {
+    if (random() < 25 && bordering(x,y,i, FIRE) !== -1) {
+        if (!particles.addActiveParticle(METHANE_PARTICLE, x,y,i)) {
+            imageData32[i] = FIRE;
+        }
+
+        return;
+    }
+    if(doRise(x,y,i,25,65)) {return;}
 }
 
 /*

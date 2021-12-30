@@ -15,6 +15,8 @@ const PROJECTILE_TYPE = {
     STONE       : 0,
     ACID        : 1,
     LASER       : 2,
+    GRENADE     : 3,
+    NUKE        : 4
 };
 
 const PLAYER_TYPE = {
@@ -37,43 +39,81 @@ const FireMove = {
     1: 'Enter'
 };
 
+/*
+ * Move to previous weapon. 
+ */
 const WeaponUp = {
     0: 'w',
     1: 'ArrowUp'
 };
 
+/*
+ * Move to next weapon. As the weapon list is cyclic,
+ * at the end of the list the weapon is switched back.
+ */
 const WeaponDown = {
     0: 's',
     1: 'ArrowDown'
 };
 
-const bunkers = [];
+
+// List of all bunkers available on the playground.
+let bunkers = [];
+
+// Currently active projectiles are stored in this list.
 let projectiles = [];
 
 class Projectile {
 
-    constructor(sX, sY, eX, eY, strength, type, _i) {
+    /*
+        sX:             The start x position
+        sY:             The start y position
+        eX:             The end x position at end of first frame
+        eY:             The end y position at end of first frame
+
+        strength:       The strength with which a projectile is fired
+        type:           The type of the projectile
+        i:              The index of the projectile in the global projectile array.
+                        Used for deleting the projectile from array in order to stop updating
+                        it and make it available for garbage collection.
+        parentI:        Index of the parent projectile. Used to avoid collision.
+
+        Velocity is calculated based on start and end position.
+        Velocity vector is the difference from start to end position times constant.
+    */
+    constructor(sX, sY, eX, eY, strength, type, i, ischild) {
         this.position = { x: eX, y: eY };
         this.velocity = { x: eX - sX, y: eY - sY };
 
-        const velMag = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+        this.type = type;
+        this.index = i;
+        this.ischild = ischild;
 
-        // 8 is highest, 60 lowest factor
-        const factor = 8 / (strength);
-
-        if (factor < 8) { factor = 8; }
-
-        this.velocity.x /= 8 * 1 / 10 * factor * velMag;
-        this.velocity.y /= factor * velMag;
+        this.calculateStrength(strength);
 
         this.deactivated = false;
-        this.type = type;
-        this.index = _i;
+        this.updated = false;
+    }
+
+    calculateStrength(strength) {
+
+        // The length of the initial velocity vector
+        const velMag = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+
+        // Numbers were determined by experimentation
+        let factor = 8 / strength;
+
+        // Set minimum value in order to prevent collision with firing bunker
+        if (factor < 8) {
+            factor = 8;
+        }
+
+        this.velocity.x /= 8 / 10 * factor * velMag;
+        this.velocity.y /= factor * velMag;
     }
 
     draw(ctx) {
         if (!this.deactivated) {
-
             switch (this.type) {
                 case PROJECTILE_TYPE.ACID:
                     ctx.fillStyle = 'rgb(157, 240, 40)';
@@ -81,21 +121,35 @@ class Projectile {
                 case PROJECTILE_TYPE.STONE:
                     ctx.fillStyle = 'rgb(255, 87, 34)';
                     break;
+                case PROJECTILE_TYPE.GRENADE:
+                    ctx.fillStyle = 'rgb(0,0,255)';
+                    break;
+                case PROJECTILE_TYPE.NUKE:
+                    ctx.fillStyle = 'rgb(253, 216, 53)';
+                    break;
             }
 
             if (this.position.y > 0) {
-                ctx.arc(this.position.x, this.position.y, 5, 0, 2 * Math.PI);
-                ctx.fill();
+                if (this.type == PROJECTILE_TYPE.NUKE) {
+                    ctx.arc(this.position.x, this.position.y, 6, 0, 2 * Math.PI);
+                } else if (this.ischild) {
+                    ctx.arc(this.position.x, this.position.y, 3, 0, 2 * Math.PI);
+                } else {
+                    ctx.arc(this.position.x, this.position.y, 5, 0, 2 * Math.PI);
+                }
             } else {
-                ctx.fillRect(this.position.x - 10, 0, 20, 3);
-                ctx.fill();
+                if (this.ischild) {
+                    ctx.fillRect(this.position.x - 5, 0, 16, 2);
+                } else {
+                    ctx.fillRect(this.position.x - 10, 0, 20, 3);
+                }
             }
 
+            ctx.fill();
         }
     }
 
     checkCollisionForBunker(x, y, b) {
-
         const dx = x - b.position.x;
         const dy = y - (b.position.y - 25);
 
@@ -103,34 +157,58 @@ class Projectile {
     }
 
     update(delta, imgData) {
+        this.updated = true;
+        // Update for laser
+        if (this.type == PROJECTILE_TYPE.LASER && !this.deactivated) {
 
-            if (this.type == PROJECTILE_TYPE.LASER && !this.deactivated) {
-
-                const endX = Math.round(this.position.x + 10000 * this.velocity.x);
-                const endY = Math.round(this.position.y + 10000 * this.velocity.y);
+            const endX = Math.round(this.position.x + 10000 * this.velocity.x);
+            const endY = Math.round(this.position.y + 10000 * this.velocity.y);
 
 
-                fillLine(this.position.x, this.position.y, endX, endY, BACKGROUND);
-                fillDirtyLine(this.position.x, this.position.y+1, endX, endY+1, BACKGROUND, FIRE);
-                fillLine(this.position.x, this.position.y+2, endX, endY+2, DIRT_PARTICLE);
+            fillLine(this.position.x, this.position.y, endX, endY, BACKGROUND);
+            fillDirtyLine(this.position.x, this.position.y+1, endX, endY+1, BACKGROUND, FIRE);
+            fillLine(this.position.x, this.position.y+2, endX, endY+2, DIRT_PARTICLE);
 
+
+            this.deactivated = true;
+            return;
+        }
+
+
+        const newX = this.position.x + delta * this.velocity.x;
+        const newY = this.position.y + delta * this.velocity.y + delta * GRAVITY.y;
+
+
+            // Spawn two smaller grenades and delete current one
+        if (this.type == PROJECTILE_TYPE.GRENADE && !this.deactivated) {
+            if (random() < 5 && !this.ischild) {
+
+                for (let i = 0; i < 5; i++) {
+                    let proj = new Projectile(
+                        0,0,
+                        0,0,0,this.type,projectiles.length - 1, true
+                    );
+
+                    proj.position.x = this.position.x;
+                    proj.position.y = this.position.y;
+                    proj.velocity.x = (1 + random() / 250)*this.velocity.x;
+                    proj.velocity.y = (1 + random() / 250)*this.velocity.y;
+
+                    projectiles.push(proj);
+                }
 
                 this.deactivated = true;
+                return;
             }
+        }
 
+        this.position.x = newX;
+        this.position.y = newY;
+        this.velocity.y += delta * GRAVITY.y / 100;
 
-            const newX = this.position.x + delta * this.velocity.x;
-            const newY = this.position.y + delta * this.velocity.y + delta * GRAVITY.y;
-
-            this.position.x = newX;
-            this.position.y = newY;
-
-            this.velocity.y += delta * GRAVITY.y / 100;
-
-
-            if (this.position.y > canvHeight || this.position.x < 0 || this.position.x > canvWidth) {
-                this.deactivated = true;
-            }
+        if (this.position.y > canvHeight || this.position.x < 0 || this.position.x > canvWidth) {
+            this.deactivated = true;
+        }
 
         // Check for collision with elements
         const intX = Math.floor(this.position.x);
@@ -140,10 +218,20 @@ class Projectile {
             // Destruction depends on type
             switch (this.type) {
                 case PROJECTILE_TYPE.STONE:
-                    fillCircle(intX, intY, 15, DIRT_PARTICLE);
+                    fillCircle(intX, intY, 15, METHANE);
                     break;
                 case PROJECTILE_TYPE.ACID:
                     fillCircle(intX, intY, 5, ACID);
+                    break;
+                case PROJECTILE_TYPE.NUKE:
+                    fillCircle(intX, intY, 75, DIRT_PARTICLE);
+                    break;
+                case PROJECTILE_TYPE.GRENADE:
+                    if (this.ischild) {
+                        fillCircle(intX, intY, 3, DIRT_PARTICLE);
+                    } else {
+                        fillCircle(intX, intY, 7, DIRT_PARTICLE);
+                    }
                     break;
             }
 
@@ -174,7 +262,7 @@ class Projectile {
                 + (this.position.y - projY)*(this.position.y - projY);
 
 
-                if (dist <= 100 && dist > .25) {
+                if (dist <= 100 && dist > .25 && this.parentI !== projectiles[i].parentI) {
                     this.deactivated = true;
                     projectiles[i].deactivated = true;
                 }
@@ -274,7 +362,8 @@ class Bunker {
 
         // Switch weapon
         if (event.key === WeaponUp[this.playerType]) {
-            this.curProjType = (this.curProjType + 1) % 3;
+            this.curProjType = (this.curProjType + 1) % 5;
+            console.log(`Current type: ${this.curProjType}`);
         }
 
 
@@ -368,11 +457,26 @@ function initBunkers() {
 
 function drawBunkers(ctx) {
     bunkers.forEach(b => b.draw(ctx));
+    projectiles.forEach(p => {
+        if (!p.deactivated) {
+            ctx.beginPath();
+            p.draw(ctx);
+            ctx.closePath();
+        }
+    });
 }
 
 function updateBunkers(delta, imgData) {
     bunkers.forEach(b => b.update(delta, imgData));
-    projectiles = projectiles.filter(p => p.deactivated !== true);    
+
+    projectiles.forEach(p => {
+        if (!p.updated) {
+            p.update(delta, imgData);
+            p.updated = false;
+        }
+    });
+
+    projectiles = projectiles.filter(p => p.deactivated !== true);
 }
 
 function handleInputBunkers(e) {

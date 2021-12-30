@@ -23,10 +23,12 @@ Because i call ``getImageData()`` on a canvas object on which i paint a image th
 
 ## ToDo
 
+- [ ] Better Code Documentation
 - [ ] More elements (lava, dynamite, fire, steam, etc.) for a richer simulation
-
 - [ ] Sound (mainly for projectiles)
 - [ ] More colors
+- [ ] Weather System
+  - Partly implemented
 
 
 ## License

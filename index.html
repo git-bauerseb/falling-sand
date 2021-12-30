@@ -4,10 +4,10 @@
     </head>
     <body>
         <div class="wrapper" id="canv-wrapper">
-            <!-- Canvas for background -->
-            <canvas id="background-canvas">No canvas available</canvas>
             <!-- Canvas for sand simulation-->
             <canvas id="drawing-canvas" width="960" height="640">No canvas available</canvas>
+            <!-- Canvas for background -->
+            <canvas id="background-canvas">No canvas available</canvas>
             <!-- Canvas for foreground-->
             <canvas id="game-canvas">No canvas available</canvas>
         </div>
@@ -69,12 +69,12 @@
                 src="./img/bunker_head_large_damage.png">
         </div>
     </body>
+    <script type="text/javascript" src="scripts/sim/particles.js"></script>
+
     
     <!-- Scripts for falling sand simulation -->
     <script type="text/javascript" src="scripts/sim/util.js"></script>
     <script type="text/javascript" src="scripts/sim/cursor.js"></script>
-    <script type="text/javascript" src="scripts/sim/spigots.js"></script>
-    <script type="text/javascript" src="scripts/sim/particles.js"></script>
     <script type="text/javascript" src="scripts/environ/background.js"></script>
     <script type="text/javascript" src="scripts/sim/elements.js"></script>
     <script type="text/javascript" src="scripts/sim/game.js"></script>

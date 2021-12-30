@@ -7,9 +7,10 @@ body {
     background: #546E7A;
 }
 
+
 .wrapper canvas {
     position: absolute;
     top: 0;
     left: 0;
-    box-shadow: 0px 0px 10px #263238;
+    /* box-shadow: 0px 0px 10px #263238; */
 }

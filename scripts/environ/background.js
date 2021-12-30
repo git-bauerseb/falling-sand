@@ -28,12 +28,25 @@ class Cloud {
         this.vel = {x: vx, y:vy};
         this._i = i;
         this.childCount = 0;
+        this.__currentTime = 0;
+        this.__rainyFactor = 1;
     }
 
     update(delta) {
         if (!isNaN(delta)) {
             this.position.x += delta * this.vel.x;
             this.position.y += delta * this.vel.y;
+
+            this.__currentTime += 1;
+
+            if (this.__currentTime === this.__rainyFactor) {
+                const intX = Math.round(.5 * (this.position.x + 93) - .3 * random());
+                const intY = Math.round(.5 * (this.position.y + 51));
+
+                fillRect(intX, intY-3, 1,1, FIRE);
+                this.__currentTime = 0;
+            }
+
         }
     }
 
@@ -53,6 +66,8 @@ function initBackground() {
 
 
 function drawBackground(ctx) {
+
+
     bckgCtx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
     bckgCtx.fillRect(0,0,2*canvWidth, 2*canvHeight);
     bckgCtx.drawImage(backgroundImage, 0,0);
@@ -62,6 +77,8 @@ function drawBackground(ctx) {
 
 function updateBackground(delta) {
 
+    clouds.forEach(c => c.update(delta));
+    /*
     if (!isNaN(delta)) {
         time += factor * .00001 * delta;
 
@@ -83,6 +100,8 @@ function updateBackground(delta) {
         clouds.push(new Cloud(random() < 50 ? -random()-90 : 2 * canvWidth + random(), random(), (random() < 50 ? -1 : 1) * vel[Math.floor(random() * 4 / 100)], 0, clouds.length - 1));
     }
 
-    clouds.forEach(c => c.update(delta));
-    clouds = clouds.filter(c => !(c.position.x < -90 || c.position.x > 2*canvWidth + 90));
+
+    */
+    clouds = clouds.filter(c => !(c.position.x < - 93 || c.position.x > 2*canvWidth));
+    
 }

@@ -217,10 +217,8 @@ function fillCircle(centerX, centerY, radius, type) {
 
 function init() {
 
-
-
     ctx.scale(2, 2);
-
+    
     document.getElementById('canv-wrapper').appendChild(drawCanvas);
     drawCanvas.style = 'display: none';
 
@@ -248,12 +246,12 @@ function init() {
             imageData32[pos] = closestColorMatch(r, g, b);
         }
     }
+    
 
     // Initialize available elements
     initElements();
-
+    initParticles();
     initBunkers();
-
     initBackground();
 
     ctx.imageSmoothingEnabled = false;
@@ -343,14 +341,17 @@ function mainLoop(timeStamp) {
     // Draw
 
     // Draw background
-    drawBackground(bckgCtx);
 
 
     foregroundCtx.clearRect(0, 0, 2 * canvWidth, 2 * canvHeight);
 
     draw();
 
+
+
     drawBunkers(foregroundCtx);
+    drawBackground(bckgCtx);
+
 }
 
 
